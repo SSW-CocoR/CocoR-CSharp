@@ -478,7 +478,7 @@ public class DFA {
 		for (State s1 = firstState.next; s1 != null; s1 = s1.next) // firstState cannot be final
 			if (used[s1.nr] && s1.endOf != null && s1.firstAction == null && !s1.ctx)
 				for (State s2 = s1.next; s2 != null; s2 = s2.next)
-					if (used[s2.nr] && s1.endOf == s2.endOf && s2.firstAction == null & !s2.ctx) {
+					if (used[s2.nr] && s1.endOf == s2.endOf && s2.firstAction == null && !s2.ctx) {
 						used[s2.nr] = false; newState[s2.nr] = s1;
 					}
 		for (State state = firstState; state != null; state = state.next)
