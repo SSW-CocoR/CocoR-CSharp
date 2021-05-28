@@ -911,17 +911,17 @@ public class Tab {
 		}
 	}
 
-	void GetSingles(Node p, ArrayList singles) {
+	void GetSingles(Node p, ArrayList singles, Node rule) {
 		if (p == null) return;  // end of graph
 		if (p.typ == Node.nt) {
-			if (p.up || DelGraph(p.next)) singles.Add(p.sym);
+			if (p.up || DelGraph(p.next) || p.sym.graph == rule) singles.Add(p.sym);
 		} else if (p.typ == Node.alt || p.typ == Node.iter || p.typ == Node.opt) {
 			if (p.up || DelGraph(p.next)) {
-				GetSingles(p.sub, singles);
-				if (p.typ == Node.alt) GetSingles(p.down, singles);
+				GetSingles(p.sub, singles, rule);
+				if (p.typ == Node.alt) GetSingles(p.down, singles, rule);
 			}
 		}
-		if (!p.up && DelNode(p)) GetSingles(p.next, singles);
+		if (!p.up && DelNode(p)) GetSingles(p.next, singles, rule);
 	}
 	
 	public bool NoCircularProductions() {
@@ -929,7 +929,7 @@ public class Tab {
 		ArrayList list = new ArrayList();
 		foreach (Symbol sym in nonterminals) {
 			ArrayList singles = new ArrayList();
-			GetSingles(sym.graph, singles); // get nonterminals s such that sym-->s
+			GetSingles(sym.graph, singles, sym.graph); // get nonterminals s such that sym-->s
 			foreach (Symbol s in singles) list.Add(new CNode(sym, s));
 		}
 		do {
