@@ -164,7 +164,8 @@ public class ParserGen {
 					}
 				}
 			else
-				gen.Write("StartOf({0})", NewCondSet(s));
+				gen.Write("StartOf({0} /* {1} {2} */)", NewCondSet(s),
+					tab.nTyp[p.typ], p.typ == Node.nt ? p.sym.name : "");
 		}
 	}
 
@@ -312,6 +313,12 @@ public class ParserGen {
 	}
 
 	void GenTokens() {
+		gen.WriteLine("\t//non terminals");
+		foreach (Symbol sym in tab.nonterminals) {
+			gen.WriteLine("\tpublic const int _NT_{0} = {1};", sym.name, sym.n);
+		}
+		gen.WriteLine("\tpublic const int maxNT = {0};", tab.nonterminals.Count-1);
+		gen.WriteLine("\t//terminals");
 		foreach (Symbol sym in tab.terminals) {
 			if (Char.IsLetter(sym.name[0]))
 				gen.WriteLine("\tpublic const int _{0} = {1};", sym.name, sym.n);

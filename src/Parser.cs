@@ -35,6 +35,27 @@ namespace at.jku.ssw.Coco {
 
 
 public class Parser {
+	//non terminals
+	public const int _NT_Coco = 0;
+	public const int _NT_SetDecl = 1;
+	public const int _NT_TokenDecl = 2;
+	public const int _NT_TokenExpr = 3;
+	public const int _NT_Set = 4;
+	public const int _NT_AttrDecl = 5;
+	public const int _NT_SemText = 6;
+	public const int _NT_Expression = 7;
+	public const int _NT_SimSet = 8;
+	public const int _NT_Char = 9;
+	public const int _NT_Sym = 10;
+	public const int _NT_Term = 11;
+	public const int _NT_Resolver = 12;
+	public const int _NT_Factor = 13;
+	public const int _NT_Attribs = 14;
+	public const int _NT_Condition = 15;
+	public const int _NT_TokenTerm = 16;
+	public const int _NT_TokenFactor = 17;
+	public const int maxNT = 17;
+	//terminals
 	public const int _EOF = 0;
 	public const int _ident = 1;
 	public const int _number = 2;
@@ -139,10 +160,10 @@ const int id = 0;
 
 	void Coco() {
 		Symbol sym; Graph g, g1, g2; CharSet s; int beg, line; 
-		if (StartOf(1)) {
+		if (StartOf(1 /* any   */)) {
 			Get();
 			beg = t.pos; line = t.line; 
-			while (StartOf(1)) {
+			while (StartOf(1 /* any   */)) {
 				Get();
 			}
 			pgen.usingPos = new Position(beg, la.pos, 0, line); 
@@ -154,7 +175,7 @@ const int id = 0;
 		gramName = t.val;
 		beg = la.pos; line = la.line;
 		
-		while (StartOf(2)) {
+		while (StartOf(2 /* any   */)) {
 			Get();
 		}
 		tab.semDeclPos = new Position(beg, la.pos, 0, line); 
@@ -315,7 +336,7 @@ const int id = 0;
 		}
 		tokenString = null;
 		
-		while (!(StartOf(5))) {SynErr(44); Get();}
+		while (!(StartOf(5 /* sync  */))) {SynErr(44); Get();}
 		if (la.kind == 18 /* "=" */) {
 			Get();
 			TokenExpr(out g);
@@ -331,7 +352,7 @@ const int id = 0;
 			 dfa.MatchLiteral(tokenString, sym);
 			}
 			
-		} else if (StartOf(6)) {
+		} else if (StartOf(6 /* sem   */)) {
 			if (kind == id) genScanner = false;
 			else dfa.MatchLiteral(sym.name, sym);
 			
@@ -374,8 +395,8 @@ const int id = 0;
 		if (la.kind == 25 /* "<" */) {
 			Get();
 			int beg = la.pos; int col = la.col; int line = la.line; 
-			while (StartOf(9)) {
-				if (StartOf(10)) {
+			while (StartOf(9 /* alt   */)) {
+				if (StartOf(10 /* any   */)) {
 					Get();
 				} else {
 					Get();
@@ -388,8 +409,8 @@ const int id = 0;
 		} else if (la.kind == 27 /* "<." */) {
 			Get();
 			int beg = la.pos; int col = la.col; int line = la.line; 
-			while (StartOf(11)) {
-				if (StartOf(12)) {
+			while (StartOf(11 /* alt   */)) {
+				if (StartOf(12 /* any   */)) {
 					Get();
 				} else {
 					Get();
@@ -405,8 +426,8 @@ const int id = 0;
 	void SemText(out Position pos) {
 		Expect(40 /* "(." */);
 		int beg = la.pos; int col = la.col; int line = la.line; 
-		while (StartOf(13)) {
-			if (StartOf(14)) {
+		while (StartOf(13 /* alt   */)) {
+			if (StartOf(14 /* any   */)) {
 				Get();
 			} else if (la.kind == _badString) {
 				Get();
@@ -491,7 +512,7 @@ const int id = 0;
 
 	void Term(out Graph g) {
 		Graph g2; Node rslv = null; g = null; 
-		if (StartOf(17)) {
+		if (StartOf(17 /* opt   */)) {
 			if (la.kind == 38 /* "IF" */) {
 				rslv = tab.NewNode(Node.rslv, null, la.line, la.col); 
 				Resolver(out rslv.pos);
@@ -501,11 +522,11 @@ const int id = 0;
 			if (rslv != null) tab.MakeSequence(g, g2);
 			else g = g2;
 			
-			while (StartOf(18)) {
+			while (StartOf(18 /* nt   Factor */)) {
 				Factor(out g2);
 				tab.MakeSequence(g, g2); 
 			}
-		} else if (StartOf(19)) {
+		} else if (StartOf(19 /* sem   */)) {
 			g = new Graph(tab.NewNode(Node.eps, null, t.line, t.col)); 
 		} else SynErr(49);
 		if (g == null) // invalid start of Term
@@ -620,8 +641,8 @@ const int id = 0;
 		if (la.kind == 25 /* "<" */) {
 			Get();
 			int beg = la.pos; int col = la.col; int line = la.line; 
-			while (StartOf(9)) {
-				if (StartOf(10)) {
+			while (StartOf(9 /* alt   */)) {
+				if (StartOf(10 /* any   */)) {
 					Get();
 				} else {
 					Get();
@@ -633,8 +654,8 @@ const int id = 0;
 		} else if (la.kind == 27 /* "<." */) {
 			Get();
 			int beg = la.pos; int col = la.col; int line = la.line; 
-			while (StartOf(11)) {
-				if (StartOf(12)) {
+			while (StartOf(11 /* alt   */)) {
+				if (StartOf(12 /* any   */)) {
 					Get();
 				} else {
 					Get();
@@ -647,7 +668,7 @@ const int id = 0;
 	}
 
 	void Condition() {
-		while (StartOf(20)) {
+		while (StartOf(20 /* alt   */)) {
 			if (la.kind == 31 /* "(" */) {
 				Get();
 				Condition();
@@ -661,7 +682,7 @@ const int id = 0;
 	void TokenTerm(out Graph g) {
 		Graph g2; 
 		TokenFactor(out g);
-		while (StartOf(7)) {
+		while (StartOf(7 /* nt   TokenFactor */)) {
 			TokenFactor(out g2);
 			tab.MakeSequence(g, g2); 
 		}
