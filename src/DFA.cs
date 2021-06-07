@@ -177,9 +177,29 @@ public class CharSet {
 		public int from, to;
 		public Range next;
 		public Range(int from, int to) { this.from = from; this.to = to; }
+
+		public override string ToString() {
+			if (from == to)
+				return from.ToString("X");
+			if (from <= 256 && to <= 256)
+				return string.Format("{0:X2}-{1:X2}", from, to);
+			return string.Format("{0:X4}-{1:X4}", from, to);
+		}
 	}
 
 	public Range head;
+
+	public override string ToString() {
+		if (head == null) return "[]";
+		StringBuilder sb = new StringBuilder();
+		sb.Append('[');
+		for (Range cur = head; cur != null; cur = cur.next) {
+			if (cur != head) sb.Append('|');
+			sb.Append(cur.ToString());
+		}
+		sb.Append(']');
+		return sb.ToString();
+	}
 
 	public bool this[int i] {
 		get {
@@ -881,17 +901,15 @@ public class DFA {
 		gen.WriteLine();
 		gen.Write    ("\tbool Comment{0}() ", i); gen.WriteLine("{");
 		gen.WriteLine("\t\tint level = 1, pos0 = pos, line0 = line, col0 = col, charPos0 = charPos;");
+		gen.WriteLine("\t\tNextCh();");
 		if (com.start.Length == 1) {
-			gen.WriteLine("\t\tNextCh();");
 			GenComBody(com);
 		} else {
-			gen.WriteLine("\t\tNextCh();");
 			gen.Write    ("\t\tif ({0}) ", ChCond(com.start[1])); gen.WriteLine("{");
 			gen.WriteLine("\t\t\tNextCh();");
 			GenComBody(com);
-			gen.WriteLine("\t\t} else {");
-			gen.WriteLine("\t\t\tbuffer.Pos = pos0; NextCh(); line = line0; col = col0; charPos = charPos0;");
 			gen.WriteLine("\t\t}");
+			gen.WriteLine("\t\tbuffer.Pos = pos0; NextCh(); line = line0; col = col0; charPos = charPos0;");
 			gen.WriteLine("\t\treturn false;");
 		}
 		gen.WriteLine("\t}");
@@ -929,7 +947,7 @@ public class DFA {
 		Symbol endOf = state.endOf;
 		gen.WriteLine("\t\t\tcase {0}:", state.nr);
 		if (endOf != null && state.firstAction != null) {
-			gen.WriteLine("\t\t\t\trecEnd = pos; recKind = {0};", endOf.n);
+			gen.WriteLine("\t\t\t\trecEnd = pos; recKind = {0} /* {1} */;", endOf.n, endOf.name);
 		}
 		bool ctxEnd = state.ctx;
 		for (Action action = state.firstAction; action != null; action = action.next) {
@@ -958,7 +976,7 @@ public class DFA {
 		if (endOf == null) {
 			gen.WriteLine("goto case 0;}");
 		} else {
-			gen.Write("t.kind = {0}; ", endOf.n);
+			gen.Write("t.kind = {0} /* {1} */; ", endOf.n, endOf.name);
 			if (endOf.tokenKind == Symbol.classLitToken) {
 				gen.WriteLine("t.val = new String(tval, 0, tlen); CheckLiteral(); return t;}");
 			} else {
