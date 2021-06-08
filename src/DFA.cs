@@ -1041,11 +1041,11 @@ public class DFA {
 		}
 		g.CopyFramePart("-->literals"); GenLiterals();
 		g.CopyFramePart("-->scan1");
-		gen.Write("\t\t\t");
+		gen.Write("\t\t\t\t");
 		if (tab.ignored.Elements() > 0) { PutRange(tab.ignored); } else { gen.Write("false"); }
 		g.CopyFramePart("-->scan2");
 		if (firstComment != null) {
-			gen.Write("\t\tif (");
+			gen.Write("\t\t\tif (");
 			com = firstComment; comIdx = 0;
 			while (com != null) {
 				gen.Write(ChCond(com.start[0]));
@@ -1053,8 +1053,9 @@ public class DFA {
 				if (com.next != null) gen.Write(" ||");
 				com = com.next; comIdx++;
 			}
-			gen.Write(") return NextToken();");
+			gen.Write(") continue;");
 		}
+		g.CopyFramePart("-->scan22");
 		if (hasCtxMoves) { gen.WriteLine(); gen.Write("\t\tint apx = 0;"); } /* pdt */
 		g.CopyFramePart("-->scan3");
 		for (State state = firstState.next; state != null; state = state.next)

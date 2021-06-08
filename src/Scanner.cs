@@ -405,10 +405,14 @@ public class Scanner {
 	}
 
 	Token NextToken() {
-		while (ch == ' ' ||
-			ch >= 9 && ch <= 10 || ch == 13
-		) NextCh();
-		if (ch == '/' && Comment0() ||ch == '/' && Comment1()) return NextToken();
+		for(;;) {
+			while (ch == ' ' ||
+				ch >= 9 && ch <= 10 || ch == 13
+			) NextCh();
+			if (ch == '/' && Comment0() ||ch == '/' && Comment1()) continue;
+			break;
+		}
+
 		int recKind = noSym;
 		int recEnd = pos;
 		t = new Token();
