@@ -172,6 +172,9 @@ Coco                            (. Symbol sym; Graph g, g1, g2; CharSet s; int b
                                        tab.GrammarCheckAll();
                                      }
                                      else doGenCode = tab.GrammarOk();
+                                     if(tab.genRREBNF && doGenCode) {
+                                       pgen.WriteRREBNF();
+                                     }
                                      if (doGenCode) {
                                        Console.Write("parser");
                                        pgen.WriteParser();

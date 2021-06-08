@@ -205,6 +205,7 @@ public class Tab {
 	public Position semDeclPos;       // position of global semantic declarations
 	public CharSet ignored;           // characters ignored by the scanner
 	public bool genAST = false;       // generate parser tree generation code
+	public bool genRREBNF = false;	  //generate EBNF for railroad diagram
 	public bool ignoreErrors = false; // ignore grammar errors for developing purposes
 	public bool[] ddt = new bool[10]; // debug and test switches
 	public Symbol gramSy;             // root nonterminal; filled by ATG

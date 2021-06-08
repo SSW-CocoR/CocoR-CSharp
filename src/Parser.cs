@@ -293,6 +293,9 @@ const int id = 0;
 		   tab.GrammarCheckAll();
 		 }
 		 else doGenCode = tab.GrammarOk();
+		 if(tab.genRREBNF && doGenCode) {
+		   pgen.WriteRREBNF();
+		 }
 		 if (doGenCode) {
 		   Console.Write("parser");
 		   pgen.WriteParser();

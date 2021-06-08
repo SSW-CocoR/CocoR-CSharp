@@ -51,7 +51,7 @@ public class Coco {
 		Console.WriteLine("Coco/R (Apr 19, 2011)");
 		string srcName = null, nsName = null, frameDir = null, ddtString = null,
 		traceFileName = null, outDir = null;
-		bool emitLines = false, ignoreErrors = false, genAST = false;
+		bool emitLines = false, ignoreErrors = false, genAST = false, genRREBNF = false;
 		int retVal = 1;
 		for (int i = 0; i < arg.Length; i++) {
 			if (arg[i] == "-namespace" && i < arg.Length - 1) nsName = arg[++i].Trim();
@@ -59,6 +59,7 @@ public class Coco {
 			else if (arg[i] == "-trace" && i < arg.Length - 1) ddtString = arg[++i].Trim();
 			else if (arg[i] == "-o" && i < arg.Length - 1) outDir = arg[++i].Trim();
 			else if (arg[i] == "-lines") emitLines = true;
+			else if (arg[i] == "-genRREBNF") genRREBNF = true;
 			else if (arg[i] == "-genAST") genAST = true;
 			else if (arg[i] == "-ignoreErrors") ignoreErrors = true;
 			else srcName = arg[i];
@@ -84,6 +85,7 @@ public class Coco {
 				parser.tab.frameDir = frameDir;
 				parser.tab.outDir = (outDir != null) ? outDir : srcDir;
 				parser.tab.emitLines = emitLines;
+				parser.tab.genRREBNF = genRREBNF;
 				if (ddtString != null) parser.tab.SetDDT(ddtString);
 
 				parser.Parse();
@@ -107,7 +109,7 @@ public class Coco {
 			                  + "  -trace     <traceString>{0}"
 			                  + "  -o         <outputDirectory>{0}"
 			                  + "  -lines{0}"
-			                  + "  -genAST"
+			                  + "  -genRREBNF"
 			                  + "  -ignoreErrors ignore grammar errors for developing purposes"
 			                  + "Valid characters in the trace string:{0}"
 			                  + "  A  trace automaton{0}"
