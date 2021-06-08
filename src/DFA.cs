@@ -851,8 +851,8 @@ public class DFA {
 			} else parser.SemErr("comment delimiters may not be structured");
 			p = p.next;
 		}
-		if (s.Length == 0 || s.Length > 2) {
-			parser.SemErr("comment delimiters must be 1 or 2 characters long");
+		if (s.Length == 0 || s.Length > 8) {
+			parser.SemErr("comment delimiters must be between 1 to 8 characters long");
 			s = new StringBuilder("?");
 		}
 		return s.ToString();
@@ -866,7 +866,13 @@ public class DFA {
 
 //------------------------ scanner generation ----------------------
 
+	void GenCommentIndented(int n, string s) {
+		for(int i= 1; i < n; ++i) gen.Write("\t");
+		gen.Write(s);
+	}
+
 	void GenComBody(Comment com) {
+		int imax = com.start.Length-1;
 		gen.WriteLine(  "\t\t\tfor(;;) {");
 		gen.Write    (  "\t\t\t\tif ({0}) ", ChCond(com.stop[0])); gen.WriteLine("{");
 		if (com.stop.Length == 1) {
@@ -874,22 +880,31 @@ public class DFA {
 			gen.WriteLine("\t\t\t\t\tif (level == 0) { oldEols = line - line0; NextCh(); return true; }");
 			gen.WriteLine("\t\t\t\t\tNextCh();");
 		} else {
-			gen.WriteLine("\t\t\t\t\tNextCh();");
-			gen.WriteLine("\t\t\t\t\tif ({0}) {{", ChCond(com.stop[1]));
+			for(int sidx = 1; sidx <= imax; ++sidx) {
+				gen.WriteLine("\t\t\t\t\tNextCh();");
+				gen.WriteLine("\t\t\t\t\tif ({0}) {{", ChCond(com.stop[sidx]));
+			}
 			gen.WriteLine("\t\t\t\t\t\tlevel--;");
-			gen.WriteLine("\t\t\t\t\t\tif (level == 0) { oldEols = line - line0; NextCh(); return true; }");
+			gen.WriteLine("\t\t\t\t\t\tif (level == 0) { /*oldEols = line - line0;*/ NextCh(); return true; }");
 			gen.WriteLine("\t\t\t\t\t\tNextCh();");
-			gen.WriteLine("\t\t\t\t\t}");
+			for(int sidx = imax; sidx > 0; --sidx) {
+				gen.WriteLine("\t\t\t\t\t}");
+			}
 		}
 		if (com.nested) {
 			gen.Write    ("\t\t\t\t}"); gen.Write(" else if ({0}) ", ChCond(com.start[0])); gen.WriteLine("{");
 			if (com.start.Length == 1)
 				gen.WriteLine("\t\t\t\t\tlevel++; NextCh();");
 			else {
-				gen.WriteLine("\t\t\t\t\tNextCh();");
-				gen.Write    ("\t\t\t\t\tif ({0}) ", ChCond(com.start[1])); gen.WriteLine("{");
+				int imaxN = com.start.Length-1;
+				for(int sidx = 1; sidx <= imaxN; ++sidx) {
+					gen.WriteLine("\t\t\t\t\tNextCh();");
+					gen.Write    ("\t\t\t\t\tif ({0}) ", ChCond(com.start[sidx])); gen.WriteLine("{");
+				}
 				gen.WriteLine("\t\t\t\t\t\tlevel++; NextCh();");
-				gen.WriteLine("\t\t\t\t\t}");
+				for(int sidx = imaxN; sidx > 0; --sidx) {
+					gen.WriteLine("\t\t\t\t\t}");
+				}
 			}
 		}
 		gen.WriteLine(    "\t\t\t\t} else if (ch == Buffer.EOF) return false;");
@@ -905,10 +920,15 @@ public class DFA {
 		if (com.start.Length == 1) {
 			GenComBody(com);
 		} else {
-			gen.Write    ("\t\tif ({0}) ", ChCond(com.start[1])); gen.WriteLine("{");
-			gen.WriteLine("\t\t\tNextCh();");
+			int imax = com.start.Length-1;
+			for(int sidx = 1; sidx <= imax; ++sidx) {
+				gen.Write    ("\t\tif ({0}) ", ChCond(com.start[sidx])); gen.WriteLine("{");
+				gen.WriteLine("\t\t\tNextCh();");
+			}
 			GenComBody(com);
-			gen.WriteLine("\t\t}");
+			for(int sidx = imax; sidx > 0; --sidx) {
+				gen.WriteLine("\t\t}");
+			}
 			gen.WriteLine("\t\tbuffer.Pos = pos0; NextCh(); line = line0; col = col0; charPos = charPos0;");
 			gen.WriteLine("\t\treturn false;");
 		}

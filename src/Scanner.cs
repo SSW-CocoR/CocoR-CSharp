@@ -363,7 +363,7 @@ public class Scanner {
 					NextCh();
 					if (ch == '/') {
 						level--;
-						if (level == 0) { oldEols = line - line0; NextCh(); return true; }
+						if (level == 0) { /*oldEols = line - line0;*/ NextCh(); return true; }
 						NextCh();
 					}
 				} else if (ch == '/') {
