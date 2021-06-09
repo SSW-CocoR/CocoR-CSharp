@@ -459,6 +459,7 @@ public class ParserGen {
 					break;
 				}
 				case Node.any: {
+					gen.Write("ANY ");
 					break;
 				}
 				case Node.eps: break; // nothing
