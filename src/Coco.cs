@@ -86,6 +86,7 @@ public class Coco {
 				parser.tab.outDir = (outDir != null) ? outDir : srcDir;
 				parser.tab.emitLines = emitLines;
 				parser.tab.genRREBNF = genRREBNF;
+				parser.tab.genAST = genAST;
 				if (ddtString != null) parser.tab.SetDDT(ddtString);
 
 				parser.Parse();
@@ -110,6 +111,7 @@ public class Coco {
 			                  + "  -o         <outputDirectory>{0}"
 			                  + "  -lines{0}"
 			                  + "  -genRREBNF"
+			                  + "  -genAST"
 			                  + "  -ignoreErrors ignore grammar errors for developing purposes"
 			                  + "Valid characters in the trace string:{0}"
 			                  + "  A  trace automaton{0}"

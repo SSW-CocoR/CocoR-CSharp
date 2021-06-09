@@ -29,10 +29,65 @@ using System.IO;
 
 
 using System;
+using System.Collections;
 
 namespace at.jku.ssw.Coco {
 
 
+
+#if PARSER_WITH_AST
+public class SynTree {
+	public SynTree(Token t ) {
+		tok = t;
+		children = new ArrayList();
+	}
+
+	public Token tok;
+	public ArrayList children;
+
+	static void printIndent(int n) {
+		for(int i=0; i < n; ++i) Console.Write(" ");
+	}
+
+	public void dump(int indent=0, bool isLast=false) {
+        int last_idx = children.Count;
+        if(tok.col > 0) {
+            printIndent(indent);
+            Console.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}", ((isLast || (last_idx == 0)) ? "= " : " "), tok.line, tok.col, tok.kind, tok.val);
+        }
+        else {
+            printIndent(indent);
+            Console.WriteLine("{0}\t{1}\t{2}\t{3}", children.Count, tok.line, tok.kind, tok.val);
+        }
+        if(last_idx > 0) {
+                for(int idx=0; idx < last_idx; ++idx) ((SynTree)children[idx]).dump(indent+4, idx == last_idx);
+        }
+	}
+
+	public void dump2(int maxT, int indent=0, bool isLast=false) {
+        int last_idx = children.Count;
+        if(tok.col > 0) {
+            printIndent(indent);
+            Console.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}", ((isLast || (last_idx == 0)) ? "= " : " "), tok.line, tok.col, tok.kind, tok.val);
+        }
+        else {
+            if(last_idx == 1) {
+                if(((SynTree)children[0]).tok.kind < maxT) {
+                    printIndent(indent);
+                    Console.WriteLine("{0}\t{1}\t{2}\t{3}", children.Count, tok.line, tok.kind, tok.val);
+                }
+            }
+            else {
+                printIndent(indent);
+                Console.WriteLine("{0}\t{1}\t{2}\t{3}", children.Count, tok.line, tok.kind, tok.val);
+            }
+        }
+        if(last_idx > 0) {
+                for(int idx=0; idx < last_idx; ++idx) ((SynTree)children[idx]).dump2(maxT, indent+4, idx == last_idx);
+        }
+	}
+};
+#endif
 
 public class Parser {
 	//non terminals
@@ -62,6 +117,43 @@ public class Parser {
 	public const int _string = 3;
 	public const int _badString = 4;
 	public const int _char = 5;
+//	public const int _("COMPILER") = 6;
+//	public const int _("IGNORECASE") = 7;
+//	public const int _("TERMINALS") = 8;
+//	public const int _("CHARACTERS") = 9;
+//	public const int _("TOKENS") = 10;
+//	public const int _("PRAGMAS") = 11;
+//	public const int _("COMMENTS") = 12;
+//	public const int _("FROM") = 13;
+//	public const int _("TO") = 14;
+//	public const int _("NESTED") = 15;
+//	public const int _("IGNORE") = 16;
+//	public const int _("PRODUCTIONS") = 17;
+//	public const int _("=") = 18;
+//	public const int _(".") = 19;
+//	public const int _("END") = 20;
+//	public const int _("+") = 21;
+//	public const int _("-") = 22;
+//	public const int _("..") = 23;
+//	public const int _("ANY") = 24;
+//	public const int _("<") = 25;
+//	public const int _(">") = 26;
+//	public const int _("<.") = 27;
+//	public const int _(".>") = 28;
+//	public const int _("|") = 29;
+//	public const int _("WEAK") = 30;
+//	public const int _("(") = 31;
+//	public const int _(")") = 32;
+//	public const int _("[") = 33;
+//	public const int _("]") = 34;
+//	public const int _("{") = 35;
+//	public const int _("}") = 36;
+//	public const int _("SYNC") = 37;
+//	public const int _("IF") = 38;
+//	public const int _("CONTEXT") = 39;
+//	public const int _("(.") = 40;
+//	public const int _(".)") = 41;
+//	public const int _(???) = 42;
 	public const int maxT = 42;
 	public const int _ddtSym = 43;
 	public const int _optionSym = 44;
@@ -362,7 +454,7 @@ const int id = 0;
 		} else SynErr(45);
 		if (la.kind == 40 /* "(." */) {
 			SemText(out sym.semPos);
-			if (typ != Node.pr) SemErr("semantic action not allowed here"); 
+			if (typ == Node.t) errors.Warning("Warning semantic action on token declarations require a custom Scanner"); 
 		}
 	}
 
@@ -773,6 +865,32 @@ const int id = 0;
 		{_x,_T,_T,_T, _T,_T,_T,_T, _T,_T,_T,_T, _T,_T,_T,_T, _T,_T,_T,_T, _T,_T,_T,_T, _T,_T,_T,_T, _T,_T,_T,_T, _x,_T,_T,_T, _T,_T,_T,_T, _T,_T,_T,_x}
 
 	};
+
+#if PARSER_WITH_AST
+	public SynTree ast_root;
+	Stack ast_stack;
+	
+	void AstAddTerminal() {
+        SynTree st = new SynTree( t );
+        ((SynTree)(ast_stack.Peek())).children.Add(st);
+	}
+
+	bool AstAddNonTerminal(int kind, string nt_name, int line) {
+        Token ntTok = new Token();
+        ntTok.kind = kind;
+        ntTok.line = line;
+        ntTok.val = nt_name;
+        SynTree st = new SynTree( ntTok );
+        ((SynTree)(ast_stack.Peek())).children.Add(st);
+        ast_stack.Push(st);
+        return true;
+	}
+
+	void AstPopNonTerminal() {
+        ast_stack.Pop();
+	}
+#endif
+	
 } // end Parser
 
 

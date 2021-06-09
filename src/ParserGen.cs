@@ -128,6 +128,17 @@ public class ParserGen {
 		}
 	}
 
+	/* TODO better interface for CopySourcePart */
+	public void CopySourcePart (Parser parser, StreamWriter gen, Position pos, int indent) {
+		// Copy text described by pos from atg to gen
+		int oldPos = parser.pgen.buffer.Pos;  // Pos is modified by CopySourcePart
+		StreamWriter prevGen = parser.pgen.gen;
+		parser.pgen.gen = gen;
+		parser.pgen.CopySourcePart(pos, 0);
+		parser.pgen.gen = prevGen;
+		parser.pgen.buffer.Pos = oldPos;
+	}
+
 	void GenErrorMsg (int errTyp, Symbol sym) {
 		errorNr++;
 		err.Write("\t\t\tcase " + errorNr + ": s = \"");
@@ -193,11 +204,23 @@ public class ParserGen {
 				case Node.t: {
 					Indent(indent);
 					// assert: if isChecked[p.sym.n] is true, then isChecked contains only p.sym.n
-					if (isChecked[p.sym.n]) gen.WriteLine("Get();");
+					if (isChecked[p.sym.n]) {
+						gen.WriteLine("Get();");
+						if(tab.genAST) {
+							gen.WriteLine("#if PARSER_WITH_AST");
+							gen.WriteLine("\tAstAddTerminal();");
+							gen.WriteLine("#endif");
+						}
+					}
 					else {
 						gen.Write("Expect(");
 						WriteSymbolOrCode(p.sym);
 						gen.WriteLine(");");
+						if(tab.genAST) {
+							gen.WriteLine("#if PARSER_WITH_AST");
+							gen.WriteLine("\tAstAddTerminal();");
+							gen.WriteLine("#endif");
+						}
 					}
 					break;
 				}
@@ -322,6 +345,8 @@ public class ParserGen {
 		foreach (Symbol sym in tab.terminals) {
 			if (Char.IsLetter(sym.name[0]))
 				gen.WriteLine("\tpublic const int _{0} = {1};", sym.name, sym.n);
+			else
+				gen.WriteLine("//\tpublic const int _({0}) = {1};", sym.name, sym.n);				
 		}
 	}
 
@@ -342,14 +367,28 @@ public class ParserGen {
 	}
 
 	void GenProductions() {
+		int idx = 0;
 		foreach (Symbol sym in tab.nonterminals) {
 			curSy = sym;
 			gen.Write("\tvoid {0}(", sym.name);
 			CopySourcePart(sym.attrPos, 0);
 			gen.WriteLine(") {");
 			CopySourcePart(sym.semPos, 2);
+			if(tab.genAST) {
+				gen.WriteLine("#if PARSER_WITH_AST");
+				if(idx == 0) gen.WriteLine("\tToken rt = new Token(); rt.kind = _NT_{0}; rt.val = \"{0}\";ast_root = new SynTree( rt ); ast_stack = new Stack(); ast_stack.Push(ast_root);", sym.name);
+				else gen.WriteLine("\tbool ntAdded = AstAddNonTerminal(_NT_{0}, \"{0}\", la.line);", sym.name);
+				gen.WriteLine("#endif");
+			}
 			GenCode(sym.graph, 2, new BitArray(tab.terminals.Count));
+			if(tab.genAST) {
+				gen.WriteLine("#if PARSER_WITH_AST");
+				if(idx == 0) gen.WriteLine("\tAstPopNonTerminal();");
+				else gen.WriteLine("\tif(ntAdded) AstPopNonTerminal();");
+				gen.WriteLine("#endif");
+			}
 			gen.WriteLine("\t}"); gen.WriteLine();
+			++idx;
 		}
 	}
 
