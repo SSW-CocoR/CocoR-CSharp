@@ -304,7 +304,7 @@ public class CharSet {
 //-----------------------------------------------------------------------------
 //  Generator
 //-----------------------------------------------------------------------------
-class Generator {
+public class Generator {
 	private const int EOF = -1;
 
 	private FileStream fram;
@@ -962,7 +962,7 @@ public class DFA {
 		gen.WriteLine("\t\t\tdefault: break;");
 		gen.Write("\t\t}");
 	}
-	
+
 	void WriteState(State state) {
 		Symbol endOf = state.endOf;
 		gen.WriteLine("\t\t\tcase {0}:", state.nr);
@@ -1000,6 +1000,11 @@ public class DFA {
 			if (endOf.tokenKind == Symbol.classLitToken) {
 				gen.WriteLine("t.val = new String(tval, 0, tlen); CheckLiteral(); return t;}");
 			} else {
+				if(endOf.semPos != null && endOf.typ == Node.t) {
+					gen.Write(" {");
+					parser.pgen.CopySourcePart(parser, gen, endOf.semPos, 0);
+					gen.Write("};");
+				}
 				gen.WriteLine("break;}");
 			}
 		}

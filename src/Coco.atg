@@ -273,7 +273,7 @@ TokenDecl<int typ>              (. string name; int kind; Symbol sym; Graph g; .
                                    else dfa.MatchLiteral(sym.name, sym);
                                  .)
   )
-  [ SemText<out sym.semPos>     (. if (typ != Node.pr) SemErr("semantic action not allowed here"); .)
+  [ SemText<out sym.semPos>     (. if (typ == Node.t) errors.Warning("Warning semantic action on token declarations require a custom Scanner"); .) //(. if (typ != Node.pr) SemErr("semantic action not allowed here"); .)
   ]
 .
 
