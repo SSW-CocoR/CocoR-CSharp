@@ -20,6 +20,6 @@ And this are my main modifications to the original:
 
 - Add a `TERMINAS` section to generate user define tokens not managed by the Scanner (from cocoxml)
 
-- Refactor the code to allow compile with and without wchar_t depending on the definition of `PARSER_WITH_AST` compiler macro
-
 - Generate between comments the correspondent representation of several magic numbers (mainly Tokens) 
+
+See also https://github.com/mingodad/CocoR-CPP and https://github.com/mingodad/CocoR-CSharp
