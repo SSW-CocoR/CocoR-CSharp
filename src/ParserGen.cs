@@ -206,21 +206,16 @@ public class ParserGen {
 					// assert: if isChecked[p.sym.n] is true, then isChecked contains only p.sym.n
 					if (isChecked[p.sym.n]) {
 						gen.WriteLine("Get();");
-						if(tab.genAST) {
-							gen.WriteLine("#if PARSER_WITH_AST");
-							gen.WriteLine("\tAstAddTerminal();");
-							gen.WriteLine("#endif");
-						}
 					}
 					else {
 						gen.Write("Expect(");
 						WriteSymbolOrCode(p.sym);
 						gen.WriteLine(");");
-						if(tab.genAST) {
-							gen.WriteLine("#if PARSER_WITH_AST");
-							gen.WriteLine("\tAstAddTerminal();");
-							gen.WriteLine("#endif");
-						}
+					}
+					if(tab.genAST) {
+						gen.WriteLine("#if PARSER_WITH_AST");
+						gen.WriteLine("\tAstAddTerminal();");
+						gen.WriteLine("#endif");
 					}
 					break;
 				}
