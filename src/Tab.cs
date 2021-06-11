@@ -924,7 +924,7 @@ public class Tab {
 		int errors = 0;
 		if(!NtsComplete()) ++errors;
 		if(!AllNtReached()) ++errors;
-		if(!NoCircularProductions()) ++errors;
+		if(!NoCircularProductions()) System.Environment.Exit(1);
 		if(!AllNtToTerm()) ++errors;
 		CheckResolvers(); CheckLL1();
 		return errors == 0;
@@ -940,17 +940,17 @@ public class Tab {
 		}
 	}
 
-	void GetSingles(Node p, ArrayList singles, Node rule) {
+	void GetSingles(Node p, ArrayList singles) {
 		if (p == null) return;  // end of graph
 		if (p.typ == Node.nt) {
-			if (p.up || DelGraph(p.next) || p.sym.graph == rule) singles.Add(p.sym);
+			singles.Add(p.sym);
 		} else if (p.typ == Node.alt || p.typ == Node.iter || p.typ == Node.opt) {
 			if (p.up || DelGraph(p.next)) {
-				GetSingles(p.sub, singles, rule);
-				if (p.typ == Node.alt) GetSingles(p.down, singles, rule);
+				GetSingles(p.sub, singles);
+				if (p.typ == Node.alt) GetSingles(p.down, singles);
 			}
 		}
-		if (!p.up && DelNode(p)) GetSingles(p.next, singles, rule);
+		if (!p.up && DelNode(p)) GetSingles(p.next, singles);
 	}
 
 	public bool NoCircularProductions() {
@@ -958,7 +958,7 @@ public class Tab {
 		ArrayList list = new ArrayList();
 		foreach (Symbol sym in nonterminals) {
 			ArrayList singles = new ArrayList();
-			GetSingles(sym.graph, singles, sym.graph); // get nonterminals s such that sym-->s
+			GetSingles(sym.graph, singles); // get nonterminals s such that sym-->s
 			foreach (Symbol s in singles) list.Add(new CNode(sym, s));
 		}
 		do {
@@ -978,7 +978,7 @@ public class Tab {
 		ok = true;
 		foreach (CNode n in list) {
 			ok = false;
-			errors.SemErr("  " + n.left.name + " --> " + n.right.name);
+			errors.SemErr("  " + n.left.name + ":" + n.left.line + " --> " + n.right.name + ":" + n.right.line);
 		}
 		return ok;
 	}
@@ -1059,7 +1059,7 @@ public class Tab {
 
 	int CheckAlts(Node p) {
 		BitArray s1, s2;
-	        int rc = 0;
+		int rc = 0;
 		while (p != null) {
 			if (p.typ == Node.alt) {
 				Node q = p;
