@@ -64,18 +64,20 @@ public class SynTree {
         }
 	}
 
-	public void dump2(int maxT, int indent=0, bool isLast=false) {
+	public void dump2(int indent=0, bool isLast=false) {
         int last_idx = children.Count;
+        int indentPlus = 4;
         if(tok.col > 0) {
             printIndent(indent);
             Console.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}", ((isLast || (last_idx == 0)) ? "= " : " "), tok.line, tok.col, tok.kind, tok.val);
         }
         else {
             if(last_idx == 1) {
-                if(((SynTree)children[0]).tok.kind < maxT) {
+                if(((SynTree)children[0]).cildren.Count == 0) {
                     printIndent(indent);
                     Console.WriteLine("{0}\t{1}\t{2}\t{3}", children.Count, tok.line, tok.kind, tok.val);
                 }
+                else indentPlus = 0;
             }
             else {
                 printIndent(indent);
@@ -83,7 +85,7 @@ public class SynTree {
             }
         }
         if(last_idx > 0) {
-                for(int idx=0; idx < last_idx; ++idx) ((SynTree)children[idx]).dump2(maxT, indent+4, idx == last_idx);
+                for(int idx=0; idx < last_idx; ++idx) ((SynTree)children[idx]).dump2(indent+indentPlus, idx == last_idx);
         }
 	}
 };
