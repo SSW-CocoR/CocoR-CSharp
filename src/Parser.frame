@@ -44,7 +44,7 @@ public class SynTree {
 		for(int i=0; i < n; ++i) Console.Write(" ");
 	}
 
-	public void dump(int indent=0, bool isLast=false) {
+	public void dump_all(int indent=0, bool isLast=false) {
         int last_idx = children.Count;
         if(tok.col > 0) {
             printIndent(indent);
@@ -55,11 +55,11 @@ public class SynTree {
             Console.WriteLine("{0}\t{1}\t{2}\t{3}", children.Count, tok.line, tok.kind, tok.val);
         }
         if(last_idx > 0) {
-                for(int idx=0; idx < last_idx; ++idx) ((SynTree)children[idx]).dump(indent+4, idx == last_idx);
+                for(int idx=0; idx < last_idx; ++idx) ((SynTree)children[idx]).dump_all(indent+4, idx == last_idx);
         }
 	}
 
-	public void dump2(int indent=0, bool isLast=false) {
+	public void dump_pruned(int indent=0, bool isLast=false) {
         int last_idx = children.Count;
         int indentPlus = 4;
         if(tok.col > 0) {
@@ -80,7 +80,7 @@ public class SynTree {
             }
         }
         if(last_idx > 0) {
-                for(int idx=0; idx < last_idx; ++idx) ((SynTree)children[idx]).dump2(indent+indentPlus, idx == last_idx);
+                for(int idx=0; idx < last_idx; ++idx) ((SynTree)children[idx]).dump_pruned(indent+indentPlus, idx == last_idx);
         }
 	}
 };
