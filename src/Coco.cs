@@ -87,6 +87,7 @@ public class Coco {
 				parser.tab.emitLines = emitLines;
 				parser.tab.genRREBNF = genRREBNF;
 				parser.tab.genAST = genAST;
+				parser.tab.ignoreErrors = ignoreErrors;
 				if (ddtString != null) parser.tab.SetDDT(ddtString);
 
 				parser.Parse();
@@ -110,9 +111,9 @@ public class Coco {
 			                  + "  -trace     <traceString>{0}"
 			                  + "  -o         <outputDirectory>{0}"
 			                  + "  -lines{0}"
-			                  + "  -genRREBNF"
-			                  + "  -genAST"
-			                  + "  -ignoreErrors ignore grammar errors for developing purposes"
+			                  + "  -genRREBNF{0}"
+			                  + "  -genAST{0}"
+			                  + "  -ignoreErrors ignore grammar errors for developing purposes{0}"
 			                  + "Valid characters in the trace string:{0}"
 			                  + "  A  trace automaton{0}"
 			                  + "  F  list first/follow sets{0}"

@@ -180,7 +180,6 @@ const int id = 0;
 	public ParserGen pgen;
 
 	bool   genScanner;
-	bool ignoreGammarErrors = false;
 	string tokenString;         // used in declarations of literal tokens
 	string noString = "-none-"; // used in declarations of literal tokens
 	string gramName; // grammar name
@@ -382,7 +381,7 @@ const int id = 0;
 		 tab.CompSymbolSets();
 		 if (tab.ddt[7]) tab.XRef();
 		 bool doGenCode = false;
-		 if(ignoreGammarErrors) {
+		 if(tab.ignoreErrors) {
 		   doGenCode = true;
 		   tab.GrammarCheckAll();
 		 }
