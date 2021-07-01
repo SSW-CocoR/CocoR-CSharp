@@ -1048,7 +1048,8 @@ public class Tab {
 			case Node.iter:
 			case Node.opt:
 			{
-				PrintFirstPath(p.sub, tok, indent, depth + 1);
+				if (!DelNode(p.sub)) //prevent endless loop with some ill grammars
+					PrintFirstPath(p.sub, tok, indent, depth + 1);
 				break;
 			}
 		    }
