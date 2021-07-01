@@ -177,9 +177,29 @@ public class CharSet {
 		public int from, to;
 		public Range next;
 		public Range(int from, int to) { this.from = from; this.to = to; }
+
+		public override string ToString() {
+			if (from == to)
+				return from.ToString("X");
+			if (from <= 256 && to <= 256)
+				return string.Format("{0:X2}-{1:X2}", from, to);
+			return string.Format("{0:X4}-{1:X4}", from, to);
+		}
 	}
 
 	public Range head;
+
+	public override string ToString() {
+		if (head == null) return "[]";
+		StringBuilder sb = new StringBuilder();
+		sb.Append('[');
+		for (Range cur = head; cur != null; cur = cur.next) {
+			if (cur != head) sb.Append('|');
+			sb.Append(cur.ToString());
+		}
+		sb.Append(']');
+		return sb.ToString();
+	}
 
 	public bool this[int i] {
 		get {
@@ -284,7 +304,7 @@ public class CharSet {
 //-----------------------------------------------------------------------------
 //  Generator
 //-----------------------------------------------------------------------------
-class Generator {
+public class Generator {
 	private const int EOF = -1;
 
 	private FileStream fram;
@@ -478,7 +498,7 @@ public class DFA {
 		for (State s1 = firstState.next; s1 != null; s1 = s1.next) // firstState cannot be final
 			if (used[s1.nr] && s1.endOf != null && s1.firstAction == null && !s1.ctx)
 				for (State s2 = s1.next; s2 != null; s2 = s2.next)
-					if (used[s2.nr] && s1.endOf == s2.endOf && s2.firstAction == null & !s2.ctx) {
+					if (used[s2.nr] && s1.endOf == s2.endOf && s2.firstAction == null && !s2.ctx) {
 						used[s2.nr] = false; newState[s2.nr] = s1;
 					}
 		for (State state = firstState; state != null; state = state.next)
@@ -831,8 +851,8 @@ public class DFA {
 			} else parser.SemErr("comment delimiters may not be structured");
 			p = p.next;
 		}
-		if (s.Length == 0 || s.Length > 2) {
-			parser.SemErr("comment delimiters must be 1 or 2 characters long");
+		if (s.Length == 0 || s.Length > 8) {
+			parser.SemErr("comment delimiters must be between 1 to 8 characters long");
 			s = new StringBuilder("?");
 		}
 		return s.ToString();
@@ -846,7 +866,13 @@ public class DFA {
 
 //------------------------ scanner generation ----------------------
 
+	void GenCommentIndented(int n, string s) {
+		for(int i= 1; i < n; ++i) gen.Write("\t");
+		gen.Write(s);
+	}
+
 	void GenComBody(Comment com) {
+		int imax = com.start.Length-1;
 		gen.WriteLine(  "\t\t\tfor(;;) {");
 		gen.Write    (  "\t\t\t\tif ({0}) ", ChCond(com.stop[0])); gen.WriteLine("{");
 		if (com.stop.Length == 1) {
@@ -854,22 +880,31 @@ public class DFA {
 			gen.WriteLine("\t\t\t\t\tif (level == 0) { oldEols = line - line0; NextCh(); return true; }");
 			gen.WriteLine("\t\t\t\t\tNextCh();");
 		} else {
-			gen.WriteLine("\t\t\t\t\tNextCh();");
-			gen.WriteLine("\t\t\t\t\tif ({0}) {{", ChCond(com.stop[1]));
+			for(int sidx = 1; sidx <= imax; ++sidx) {
+				gen.WriteLine("\t\t\t\t\tNextCh();");
+				gen.WriteLine("\t\t\t\t\tif ({0}) {{", ChCond(com.stop[sidx]));
+			}
 			gen.WriteLine("\t\t\t\t\t\tlevel--;");
-			gen.WriteLine("\t\t\t\t\t\tif (level == 0) { oldEols = line - line0; NextCh(); return true; }");
+			gen.WriteLine("\t\t\t\t\t\tif (level == 0) { /*oldEols = line - line0;*/ NextCh(); return true; }");
 			gen.WriteLine("\t\t\t\t\t\tNextCh();");
-			gen.WriteLine("\t\t\t\t\t}");
+			for(int sidx = imax; sidx > 0; --sidx) {
+				gen.WriteLine("\t\t\t\t\t}");
+			}
 		}
 		if (com.nested) {
 			gen.Write    ("\t\t\t\t}"); gen.Write(" else if ({0}) ", ChCond(com.start[0])); gen.WriteLine("{");
 			if (com.start.Length == 1)
 				gen.WriteLine("\t\t\t\t\tlevel++; NextCh();");
 			else {
-				gen.WriteLine("\t\t\t\t\tNextCh();");
-				gen.Write    ("\t\t\t\t\tif ({0}) ", ChCond(com.start[1])); gen.WriteLine("{");
+				int imaxN = com.start.Length-1;
+				for(int sidx = 1; sidx <= imaxN; ++sidx) {
+					gen.WriteLine("\t\t\t\t\tNextCh();");
+					gen.Write    ("\t\t\t\t\tif ({0}) ", ChCond(com.start[sidx])); gen.WriteLine("{");
+				}
 				gen.WriteLine("\t\t\t\t\t\tlevel++; NextCh();");
-				gen.WriteLine("\t\t\t\t\t}");
+				for(int sidx = imaxN; sidx > 0; --sidx) {
+					gen.WriteLine("\t\t\t\t\t}");
+				}
 			}
 		}
 		gen.WriteLine(    "\t\t\t\t} else if (ch == Buffer.EOF) return false;");
@@ -881,17 +916,20 @@ public class DFA {
 		gen.WriteLine();
 		gen.Write    ("\tbool Comment{0}() ", i); gen.WriteLine("{");
 		gen.WriteLine("\t\tint level = 1, pos0 = pos, line0 = line, col0 = col, charPos0 = charPos;");
+		gen.WriteLine("\t\tNextCh();");
 		if (com.start.Length == 1) {
-			gen.WriteLine("\t\tNextCh();");
 			GenComBody(com);
 		} else {
-			gen.WriteLine("\t\tNextCh();");
-			gen.Write    ("\t\tif ({0}) ", ChCond(com.start[1])); gen.WriteLine("{");
-			gen.WriteLine("\t\t\tNextCh();");
+			int imax = com.start.Length-1;
+			for(int sidx = 1; sidx <= imax; ++sidx) {
+				gen.Write    ("\t\tif ({0}) ", ChCond(com.start[sidx])); gen.WriteLine("{");
+				gen.WriteLine("\t\t\tNextCh();");
+			}
 			GenComBody(com);
-			gen.WriteLine("\t\t} else {");
-			gen.WriteLine("\t\t\tbuffer.Pos = pos0; NextCh(); line = line0; col = col0; charPos = charPos0;");
-			gen.WriteLine("\t\t}");
+			for(int sidx = imax; sidx > 0; --sidx) {
+				gen.WriteLine("\t\t}");
+			}
+			gen.WriteLine("\t\tbuffer.Pos = pos0; NextCh(); line = line0; col = col0; charPos = charPos0;");
 			gen.WriteLine("\t\treturn false;");
 		}
 		gen.WriteLine("\t}");
@@ -924,12 +962,12 @@ public class DFA {
 		gen.WriteLine("\t\t\tdefault: break;");
 		gen.Write("\t\t}");
 	}
-	
+
 	void WriteState(State state) {
 		Symbol endOf = state.endOf;
 		gen.WriteLine("\t\t\tcase {0}:", state.nr);
 		if (endOf != null && state.firstAction != null) {
-			gen.WriteLine("\t\t\t\trecEnd = pos; recKind = {0};", endOf.n);
+			gen.WriteLine("\t\t\t\trecEnd = pos; recKind = {0} /* {1} */;", endOf.n, endOf.name);
 		}
 		bool ctxEnd = state.ctx;
 		for (Action action = state.firstAction; action != null; action = action.next) {
@@ -958,10 +996,15 @@ public class DFA {
 		if (endOf == null) {
 			gen.WriteLine("goto case 0;}");
 		} else {
-			gen.Write("t.kind = {0}; ", endOf.n);
+			gen.Write("t.kind = {0} /* {1} */; ", endOf.n, endOf.name);
 			if (endOf.tokenKind == Symbol.classLitToken) {
 				gen.WriteLine("t.val = new String(tval, 0, tlen); CheckLiteral(); return t;}");
 			} else {
+				if(endOf.semPos != null && endOf.typ == Node.t) {
+					gen.Write(" {");
+					parser.pgen.CopySourcePart(parser, gen, endOf.semPos, 0);
+					gen.Write("};");
+				}
 				gen.WriteLine("break;}");
 			}
 		}
@@ -1023,11 +1066,11 @@ public class DFA {
 		}
 		g.CopyFramePart("-->literals"); GenLiterals();
 		g.CopyFramePart("-->scan1");
-		gen.Write("\t\t\t");
+		gen.Write("\t\t\t\t");
 		if (tab.ignored.Elements() > 0) { PutRange(tab.ignored); } else { gen.Write("false"); }
 		g.CopyFramePart("-->scan2");
 		if (firstComment != null) {
-			gen.Write("\t\tif (");
+			gen.Write("\t\t\tif (");
 			com = firstComment; comIdx = 0;
 			while (com != null) {
 				gen.Write(ChCond(com.start[0]));
@@ -1035,8 +1078,9 @@ public class DFA {
 				if (com.next != null) gen.Write(" ||");
 				com = com.next; comIdx++;
 			}
-			gen.Write(") return NextToken();");
+			gen.Write(") continue;");
 		}
+		g.CopyFramePart("-->scan22");
 		if (hasCtxMoves) { gen.WriteLine(); gen.Write("\t\tint apx = 0;"); } /* pdt */
 		g.CopyFramePart("-->scan3");
 		for (State state = firstState.next; state != null; state = state.next)
