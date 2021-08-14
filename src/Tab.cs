@@ -71,6 +71,7 @@ public class Symbol {
 	public Position attrPos;     // nt: position of attributes in source text (or null)
 	public Position semPos;      // pr: pos of semantic action in source text (or null)
 	                             // nt: pos of local declarations in source text (or null)
+	public Symbol 	inherits;    // optional, token from which this token derives
 
 	public Symbol(int typ, string name, int line, int col) {
 		this.typ = typ; this.name = name; this.line = line; this.col = col;

@@ -126,8 +126,17 @@ public class Parser {
 		}
 	}
 
+	bool isKind(Token t, int n) {
+		int k = t.kind;
+		while(k >= 0) {
+			if (k == n) return true;
+			k = tBase[k];
+		}
+		return false;
+	}
+
 	void Expect (int n) {
-		if (la.kind==n) Get(); else { SynErr(n); }
+		if (isKind(la, n)) Get(); else { SynErr(n); }
 	}
 
 	bool StartOf (int s) {
@@ -135,7 +144,7 @@ public class Parser {
 	}
 
 	void ExpectWeak (int n, int follow) {
-		if (la.kind == n) Get();
+		if (isKind(la, n)) Get();
 		else {
 			SynErr(n);
 			while (!StartOf(follow)) Get();
@@ -145,7 +154,7 @@ public class Parser {
 
 	bool WeakSeparator(int n, int syFol, int repFol) {
 		int kind = la.kind;
-		if (kind == n) {Get(); return true;}
+		if (isKind(la, n)) {Get(); return true;}
 		else if (StartOf(repFol)) {return false;}
 		else {
 			SynErr(n);
@@ -167,6 +176,11 @@ public class Parser {
 -->parseRoot
 	}
 
+	// a token's base type
+	public static readonly int[] tBase = {
+-->tbase
+	};
+
 	static readonly bool[,] set = {
 -->initialization
 	};
@@ -174,7 +188,7 @@ public class Parser {
 #if PARSER_WITH_AST
 	public SynTree ast_root;
 	Stack ast_stack;
-	
+
 	void AstAddTerminal() {
         SynTree st = new SynTree( t );
         ((SynTree)(ast_stack.Peek())).children.Add(st);
@@ -195,7 +209,7 @@ public class Parser {
         ast_stack.Pop();
 	}
 #endif
-	
+
 } // end Parser
 
 

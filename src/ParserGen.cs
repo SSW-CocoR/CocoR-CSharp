@@ -168,8 +168,9 @@ public class ParserGen {
 			else if (n <= maxTerm)
 				foreach (Symbol sym in tab.terminals) {
 					if (s[sym.n]) {
-						gen.Write("la.kind == ");
+						gen.Write("isKind(la, ");
 						WriteSymbolOrCode(sym);
+						gen.Write(")");
 						--n;
 						if (n > 0) gen.Write(" || ");
 					}
@@ -330,6 +331,17 @@ public class ParserGen {
 		}
 	}
 
+	void GenTokenBase() {
+		int idx = 0;
+		foreach (Symbol sym in tab.terminals) {
+			if((idx++ % 20) == 0) gen.Write("\n\t\t");
+			if (sym.inherits == null)
+				gen.Write("{0,2},", -1); // not inherited
+			else
+				gen.Write("{0,2},", sym.inherits.n);
+		}
+	}
+
 	void GenTokens() {
 		gen.WriteLine("\t//non terminals");
 		foreach (Symbol sym in tab.nonterminals) {
@@ -339,9 +351,12 @@ public class ParserGen {
 		gen.WriteLine("\t//terminals");
 		foreach (Symbol sym in tab.terminals) {
 			if (Char.IsLetter(sym.name[0]))
-				gen.WriteLine("\tpublic const int _{0} = {1};", sym.name, sym.n);
+				gen.Write("\tpublic const int _{0} = {1};", sym.name, sym.n);
 			else
-				gen.WriteLine("//\tpublic const int _({0}) = {1};", sym.name, sym.n);
+				gen.Write("//\tpublic const int _({0}) = {1};", sym.name, sym.n);
+			if(sym.inherits != null)
+				gen.Write(" // INHERITS -> {0}", sym.inherits.name);
+			gen.WriteLine();
 		}
 	}
 
@@ -429,6 +444,7 @@ public class ParserGen {
 		g.CopyFramePart("-->pragmas"); GenCodePragmas();
 		g.CopyFramePart("-->productions"); GenProductions();
 		g.CopyFramePart("-->parseRoot"); gen.WriteLine("\t\t{0}_NT();", tab.gramSy.name); if (tab.checkEOF) gen.WriteLine("\t\tExpect(0);");
+		g.CopyFramePart("-->tbase"); GenTokenBase(); // write all tokens base types
 		g.CopyFramePart("-->initialization"); InitSets();
 		g.CopyFramePart("-->errors"); gen.Write(err.ToString());
 		g.CopyFramePart(null);
