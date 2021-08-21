@@ -318,10 +318,14 @@ public class Scanner {
 	}
 
 	Token NextToken() {
-		while (ch == ' ' ||
+		for(;;) {
+			while (ch == ' ' ||
 -->scan1
-		) NextCh();
+			) NextCh();
 -->scan2
+			break;
+		}
+-->scan22
 		int recKind = noSym;
 		int recEnd = pos;
 		t = new Token();
